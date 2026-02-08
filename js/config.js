@@ -28,18 +28,20 @@ const CONFIG = {
         ADMIN_USERNAME: 'admin_username'
     },
     
-    // Секторы барабана (8 секторов)
-    // 2 выигрышных: бургер, пицца (25% шанс)
+    // Секторы барабана (9 секторов)
+    // 3 выигрышных: бургер, пицца, фри (разделены через 2 пустых)
     // 6 пустых
+    // Процент выигрыша: 3/9 = 33.3%
     SECTORS: [
         { id: 1, name: 'Бургер Классический', icon: '🍔', winner: true, color: '#ff6b35' },
-        { id: 2, name: 'Пицца Маргарита', icon: '🍕', winner: true, color: '#ff6b35' },
+        { id: 2, name: 'Пусто', icon: '❌', winner: false, color: '#2d3436' },
         { id: 3, name: 'Пусто', icon: '❌', winner: false, color: '#2d3436' },
-        { id: 4, name: 'Пусто', icon: '❌', winner: false, color: '#2d3436' },
+        { id: 4, name: 'Пицца Маргарита', icon: '🍕', winner: true, color: '#ff6b35' },
         { id: 5, name: 'Пусто', icon: '❌', winner: false, color: '#2d3436' },
         { id: 6, name: 'Пусто', icon: '❌', winner: false, color: '#2d3436' },
-        { id: 7, name: 'Пусто', icon: '❌', winner: false, color: '#2d3436' },
-        { id: 8, name: 'Пусто', icon: '❌', winner: false, color: '#2d3436' }
+        { id: 7, name: 'Картошка Фри', icon: '🍟', winner: true, color: '#ff6b35' },
+        { id: 8, name: 'Пусто', icon: '❌', winner: false, color: '#2d3436' },
+        { id: 9, name: 'Пусто', icon: '❌', winner: false, color: '#2d3436' }
     ]
 };
 
