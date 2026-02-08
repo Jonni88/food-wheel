@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔐 Админ-панель | Барабан Удачи</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #ff6b35;
+            --success: #00c853;
+            --danger: #ff1744;
+            --bg: #1a1a2e;
+            --surface: #16213e;
+            --text: #ffffff;
+            --text-secondary: #b0b0c0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            padding: 30px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 30px;
+        }
+
+        header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            color: var(--text-secondary);
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            padding: 20px;
+            border-radius: 16px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+            display: block;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        .section {
+            background: var(--surface);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .section h2 {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Wheel Config */
+        .wheel-preview {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .wheel-container {
+            position: relative;
+            width: 300px;
+            height: 300px;
+        }
+
+        .wheel {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 0 10px #2d1b4e, 0 0 0 15px var(--primary);
+        }
+
+        .wheel-segment {
+            position: absolute;
+            width: 50%;
+            height: 50%;
+            transform-origin: 100% 100%;
+            left: 50%;
+            top: 0;
+            clip-path: polygon(0 0, 100% 0, 100% 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .segment-content {
+            position: absolute;
+            transform: rotate(-22.5deg) translateX(25px);
+            text-align: center;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .segment-icon {
+            font-size: 1.3rem;
+            display: block;
+        }
+
+        .sectors-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .sector-item {
+            background: rgba(0,0,0,0.2);
+            padding: 15px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border: 2px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .sector-item.active {
+            border-color: var(--success);
+            background: rgba(0,200,83,0.1);
+        }
+
+        .sector-toggle {
+            width: 50px;
+            height: 28px;
+            background: #444;
+            border-radius: 14px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .sector-toggle.active {
+            background: var(--success);
+        }
+
+        .sector-toggle::after {
+            content: '';
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: all 0.3s;
+        }
+
+        .sector-toggle.active::after {
+            left: 24px;
+        }
+
+        .sector-info {
+            flex: 1;
+        }
+
+        .sector-name {
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .sector-status {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .sector-icon {
+            font-size: 1.5rem;
+        }
+
+        /* Settings */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 10px;
+            color: white;
+            font-size: 1rem;
+            font-family: inherit;
+        }
+
+        .form-group textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .btn {
+            padding: 14px 28px;
+            background: linear-gradient(135deg, var(--primary), #e55a2b);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(255,107,53,0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--success), #00b248);
+        }
+
+        .btn-success:hover {
+            box-shadow: 0 10px 30px rgba(0,200,83,0.4);
+        }
+
+        /* Winners List */
+        .winners-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .winner-item {
+            background: rgba(0,0,0,0.2);
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .winner-info h4 {
+            margin-bottom: 4px;
+        }
+
+        .winner-info p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .winner-code {
+            background: rgba(0,200,83,0.2);
+            color: var(--success);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-secondary);
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .sectors-list {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="../" class="back-link">← Назад к приложению</a>
+
+        <header>
+            <h1>🔐 Админ-панель</h1>
+            <p>Управление барабаном удачи</p>
+        </header>
+
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-value" id="totalSpins">0</span>
+                <span class="stat-label">Всего прокруток</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value" id="totalWins">0</span>
+                <span class="stat-label">Выигрышей</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value" id="winRate">0%</span>
+                <span class="stat-label">Процент выигрыша</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value" id="totalRevenue">0 ₽</span>
+                <span class="stat-label">Доход</span>
+            </div>
+        </div>
+
+        <!-- Wheel Configuration -->
+        <div class="section">
+            <h2>🎯 Настройка барабана</h2>
+
+            <div class="wheel-preview">
+                <div class="wheel-container">
+                    <div class="wheel" id="wheelPreview">
+                        <!-- Generated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <p style="margin-bottom: 20px; color: var(--text-secondary);">
+                Кликните на переключатель, чтобы сделать сектор выигрышным:
+            </p>
+
+            <div class="sectors-list" id="sectorsList">
+                <!-- Generated by JS -->
+            </div>
+
+            <div style="margin-top: 20px; text-align: center;">
+                <button class="btn btn-success" onclick="saveConfiguration()">
+                    💾 Сохранить настройки
+                </button>
+            </div>
+        </div>
+
+        <!-- Settings -->
+        <div class="section">
+            <h2>⚙️ Настройки</h2>
+
+            <div class="form-group">
+                <label>Цена прокрутки (₽)</label>
+                <input type="number" id="spinPrice" value="100" min="10">
+            </div>
+
+            <div class="form-group">
+                <label>Адрес заведения</label>
+                <textarea id="venueAddress" placeholder="г. Москва, ул. Примерная, 1"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Телефон для связи</label>
+                <input type="text" id="contactPhone" placeholder="+7 (999) 123-45-67">
+            </div>
+
+            <button class="btn" onclick="saveSettings()">
+                💾 Сохранить настройки
+            </button>
+        </div>
+
+        <!-- Recent Winners -->
+        <div class="section">
+            <h2>🏆 Последние выигрыши</h2>
+
+            <div class="winners-list" id="winnersList">
+                <div class="empty-state">
+                    Пока нет выигрышей
+                </div>
+            </div>
+
+            <div style="margin-top: 20px;">
+                <button class="btn" onclick="exportWinners()">
+                    📥 Экспортировать список
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/config.js"></script>
+    <script>
+        // Load and display current configuration
+        let currentSectors = [...CONFIG.SECTORS];
+
+        function init() {
+            loadConfig();
+            currentSectors = [...CONFIG.SECTORS];
+            renderWheelPreview();
+            renderSectorsList();
+            loadSettings();
+            loadStatistics();
+            loadWinners();
+        }
+
+        // Render wheel preview
+        function renderWheelPreview() {
+            const wheel = document.getElementById('wheelPreview');
+            wheel.innerHTML = '';
+            
+            const anglePerSector = 360 / currentSectors.length;
+            
+            currentSectors.forEach((sector, index) => {
+                const segment = document.createElement('div');
+                segment.className = 'wheel-segment';
+                segment.style.transform = `rotate(${index * anglePerSector}deg)`;
+                segment.style.background = sector.winner 
+                    ? 'linear-gradient(135deg, #00c853, #00b248)' 
+                    : 'linear-gradient(135deg, #666, #444)';
+                
+                segment.innerHTML = `
+                    <div class="segment-content">
+                        <span class="segment-icon">${sector.icon}</span>
+                        ${sector.name}
+                    </div>
+                `;
+                
+                wheel.appendChild(segment);
+            });
+        }
+
+        // Render sectors list
+        function renderSectorsList() {
+            const list = document.getElementById('sectorsList');
+            
+            list.innerHTML = currentSectors.map((sector, index) => `
+                <div class="sector-item ${sector.winner ? 'active' : ''}">
+                    <span class="sector-icon">${sector.icon}</span>
+                    
+                    <div class="sector-info">
+                        <div class="sector-name">${sector.name}</div>
+                        <div class="sector-status">${sector.winner ? '✅ Выигрышный' : '❌ Пустой'}</div>
+                    </div>
+                    
+                    <div class="sector-toggle ${sector.winner ? 'active' : ''}" onclick="toggleSector(${index})"></div>
+                </div>
+            `).join('');
+        }
+
+        // Toggle sector
+        function toggleSector(index) {
+            currentSectors[index].winner = !currentSectors[index].winner;
+            renderWheelPreview();
+            renderSectorsList();
+        }
+
+        // Save configuration
+        function saveConfiguration() {
+            CONFIG.SECTORS = [...currentSectors];
+            saveConfig();
+            
+            // Update all clients (in production, this would be done via server)
+            alert('✅ Конфигурация сохранена!');
+        }
+
+        // Load settings
+        function loadSettings() {
+            document.getElementById('spinPrice').value = CONFIG.SPIN_PRICE;
+            document.getElementById('venueAddress').value = CONFIG.VENUE_ADDRESS;
+            document.getElementById('contactPhone').value = CONFIG.CONTACT_PHONE;
+        }
+
+        // Save settings
+        function saveSettings() {
+            CONFIG.SPIN_PRICE = parseInt(document.getElementById('spinPrice').value) || 100;
+            CONFIG.VENUE_ADDRESS = document.getElementById('venueAddress').value;
+            CONFIG.CONTACT_PHONE = document.getElementById('contactPhone').value;
+            
+            saveConfig();
+            alert('✅ Настройки сохранены!');
+        }
+
+        // Load statistics
+        function loadStatistics() {
+            // Get all users data
+            let totalSpins = 0;
+            let totalWins = 0;
+            let totalRevenue = 0;
+            
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && key.startsWith('foodWheelUser_')) {
+                    const data = JSON.parse(localStorage.getItem(key));
+                    if (data.history) {
+                        totalSpins += data.history.length;
+                        totalWins += data.history.filter(h => h.type === 'win').length;
+                    }
+                }
+            }
+            
+            totalRevenue = totalSpins * CONFIG.SPIN_PRICE;
+            
+            document.getElementById('totalSpins').textContent = totalSpins;
+            document.getElementById('totalWins').textContent = totalWins;
+            document.getElementById('winRate').textContent = totalSpins > 0 
+                ? Math.round((totalWins / totalSpins) * 100) + '%' 
+                : '0%';
+            document.getElementById('totalRevenue').textContent = totalRevenue.toLocaleString() + ' ₽';
+        }
+
+        // Load winners
+        function loadWinners() {
+            const list = document.getElementById('winnersList');
+            let allWins = [];
+            
+            // Collect all wins from all users
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && key.startsWith('foodWheelUser_')) {
+                    const data = JSON.parse(localStorage.getItem(key));
+                    if (data.history) {
+                        const wins = data.history
+                            .filter(h => h.type === 'win')
+                            .map(h => ({...h, userId: key.replace('foodWheelUser_', '')}));
+                        allWins = allWins.concat(wins);
+                    }
+                }
+            }
+            
+            // Sort by date (newest first)
+            allWins.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            if (allWins.length === 0) {
+                list.innerHTML = '<div class="empty-state">Пока нет выигрышей</div>';
+                return;
+            }
+            
+            list.innerHTML = allWins.slice(0, 20).map(win => {
+                const date = new Date(win.date).toLocaleString('ru-RU');
+                return `
+                    <div class="winner-item">
+                        <div class="winner-info">
+                            <h4>${win.icon} ${win.prize}</h4>
+                            <p>${date} · Пользователь: ${win.userId.slice(0, 8)}...</p>
+                        </div>
+                        <div class="winner-code">${win.code}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Export winners
+        function exportWinners() {
+            let allWins = [];
+            
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && key.startsWith('foodWheelUser_')) {
+                    const data = JSON.parse(localStorage.getItem(key));
+                    if (data.history) {
+                        const wins = data.history
+                            .filter(h => h.type === 'win')
+                            .map(h => ({
+                                ...h,
+                                userId: key.replace('foodWheelUser_', ''),
+                                date: new Date(h.date).toLocaleString('ru-RU')
+                            }));
+                        allWins = allWins.concat(wins);
+                    }
+                }
+            }
+            
+            const csv = [
+                ['Дата', 'Приз', 'Код', 'Пользователь'].join(';'),
+                ...allWins.map(w => [w.date, w.prize, w.code, w.userId].join(';'))
+            ].join('\n');
+            
+            const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'winners_' + new Date().toISOString().split('T')[0] + '.csv';
+            link.click();
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
