@@ -21,23 +21,40 @@ let gameState = {
 
 // Initialize
 function init() {
+    console.log('Initializing app...');
+    
     loadConfig();
+    console.log('Config loaded:', CONFIG);
+    
     loadUserData();
+    console.log('User data loaded:', userData);
     
     // В тестовом режиме даём бесплатные прокрутки
     if (CONFIG.TEST_MODE) {
+        console.log('Test mode enabled');
         userData.spins = CONFIG.FREE_SPINS;
         saveUserData();
         setupTestModeUI();
     }
     
+    console.log('Rendering wheel...');
     renderWheel();
+    
+    console.log('Rendering prizes list...');
     renderPrizesList();
+    
+    console.log('Updating UI...');
     updateUI();
     
     // Set Telegram theme colors
-    tg.setHeaderColor('#1a1a2e');
-    tg.setBackgroundColor('#1a1a2e');
+    if (tg.setHeaderColor) {
+        tg.setHeaderColor('#1a1a2e');
+    }
+    if (tg.setBackgroundColor) {
+        tg.setBackgroundColor('#1a1a2e');
+    }
+    
+    console.log('Initialization complete!');
 }
 
 // Setup Test Mode UI
@@ -144,7 +161,12 @@ function renderPrizesList() {
 
 // Spin the wheel
 function spinWheel() {
-    if (gameState.isSpinning) return;
+    console.log('Spin button clicked!');
+    
+    if (gameState.isSpinning) {
+        console.log('Already spinning, returning');
+        return;
+    }
     
     // В тестовом режиме просто проверяем есть ли прокрутки
     if (CONFIG.TEST_MODE) {
@@ -173,6 +195,14 @@ function spinWheel() {
     const wheel = document.getElementById('wheel');
     const spinBtn = document.getElementById('spinBtn');
     
+    if (!wheel) {
+        console.error('Wheel element not found!');
+        gameState.isSpinning = false;
+        return;
+    }
+    
+    console.log('Starting spin animation');
+    
     wheel.classList.add('spinning');
     spinBtn.disabled = true;
     
@@ -180,13 +210,19 @@ function spinWheel() {
     const winningIndex = Math.floor(Math.random() * CONFIG.SECTORS.length);
     const sector = CONFIG.SECTORS[winningIndex];
     
+    console.log('Winning sector:', sector);
+    
     // Calculate rotation
     const anglePerSector = 360 / CONFIG.SECTORS.length;
     const targetAngle = 360 - (winningIndex * anglePerSector) - (anglePerSector / 2);
     const spins = 5 + Math.floor(Math.random() * 3); // 5-7 spins
-    const totalRotation = gameState.currentRotation + (spins * 360) + targetAngle - (gameState.currentRotation % 360);
+    const totalRotation = (gameState.currentRotation || 0) + (spins * 360) + targetAngle - ((gameState.currentRotation || 0) % 360);
     
     gameState.currentRotation = totalRotation;
+    
+    console.log('Rotating to:', totalRotation);
+    
+    // Apply rotation
     wheel.style.transform = `rotate(${totalRotation}deg)`;
     
     // Haptic feedback
@@ -196,6 +232,7 @@ function spinWheel() {
     
     // Result after animation
     setTimeout(() => {
+        console.log('Spin completed');
         gameState.isSpinning = false;
         wheel.classList.remove('spinning');
         spinBtn.disabled = false;
@@ -459,7 +496,28 @@ style.textContent = `
 document.head.appendChild(style);
 
 // Initialize on load
-document.addEventListener('DOMContentLoaded', init);
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM loaded');
+    
+    try {
+        init();
+        
+        // Добавляем обработчик клика на кнопку напрямую
+        const spinBtn = document.getElementById('spinBtn');
+        if (spinBtn) {
+            console.log('Spin button found, adding click listener');
+            spinBtn.addEventListener('click', function(e) {
+                console.log('Spin button clicked via addEventListener');
+                e.preventDefault();
+                spinWheel();
+            });
+        } else {
+            console.error('Spin button not found!');
+        }
+    } catch (error) {
+        console.error('Error during initialization:', error);
+    }
+});
 
 // Close modals on outside click
 document.querySelectorAll('.modal').forEach(modal => {
