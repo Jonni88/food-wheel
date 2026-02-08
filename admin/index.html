@@ -308,6 +308,44 @@
             font-size: 1.1rem;
         }
 
+        .winner-code.claimed {
+            background: rgba(100,100,100,0.2);
+            color: var(--text-secondary);
+            text-decoration: line-through;
+        }
+
+        .claim-btn {
+            background: linear-gradient(135deg, var(--success), #00b248);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            color: white;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .claim-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,200,83,0.4);
+        }
+
+        .claim-btn.claimed {
+            background: #444;
+            cursor: default;
+        }
+
+        .claim-btn.claimed::before {
+            content: '✓ ';
+        }
+
+        .winner-status {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
         .empty-state {
             text-align: center;
             padding: 40px;
@@ -548,6 +586,9 @@
             const list = document.getElementById('winnersList');
             let allWins = [];
             
+            // Load claimed status from localStorage
+            const claimedWins = JSON.parse(localStorage.getItem('claimedWins') || '[]');
+            
             // Collect all wins from all users
             for (let i = 0; i < localStorage.length; i++) {
                 const key = localStorage.key(i);
@@ -556,7 +597,11 @@
                     if (data.history) {
                         const wins = data.history
                             .filter(h => h.type === 'win')
-                            .map(h => ({...h, userId: key.replace('foodWheelUser_', '')}));
+                            .map(h => ({
+                                ...h, 
+                                userId: key.replace('foodWheelUser_', ''),
+                                isClaimed: claimedWins.includes(h.code)
+                            }));
                         allWins = allWins.concat(wins);
                     }
                 }
@@ -570,23 +615,88 @@
                 return;
             }
             
-            list.innerHTML = allWins.slice(0, 20).map(win => {
+            list.innerHTML = allWins.slice(0, 20).map((win, index) => {
                 const date = new Date(win.date).toLocaleString('ru-RU');
+                const claimedClass = win.isClaimed ? 'claimed' : '';
+                const btnText = win.isClaimed ? 'Выдан' : 'Отметить выданным';
+                const btnClass = win.isClaimed ? 'claim-btn claimed' : 'claim-btn';
+                
                 return `
-                    <div class="winner-item">
+                    <div class="winner-item" data-code="${win.code}">
                         <div class="winner-info">
                             <h4>${win.icon} ${win.prize}</h4>
                             <p>${date} · Пользователь: ${win.userId.slice(0, 8)}...</p>
                         </div>
-                        <div class="winner-code">${win.code}</div>
+                        <div class="winner-status">
+                            <div class="winner-code ${claimedClass}">${win.code}</div>
+                            <button class="${btnClass}" onclick="markAsClaimed('${win.code}')" ${win.isClaimed ? 'disabled' : ''}>
+                                ${btnText}
+                            </button>
+                        </div>
                     </div>
                 `;
             }).join('');
         }
 
+        // Mark win as claimed
+        function markAsClaimed(code) {
+            let claimedWins = JSON.parse(localStorage.getItem('claimedWins') || '[]');
+            
+            if (!claimedWins.includes(code)) {
+                claimedWins.push(code);
+                localStorage.setItem('claimedWins', JSON.stringify(claimedWins));
+                
+                // Refresh the list
+                loadWinners();
+                
+                // Show notification
+                showNotification('✅ Отмечено как выдано!');
+            }
+        }
+
+        // Show notification
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: var(--success);
+                color: white;
+                padding: 16px 24px;
+                border-radius: 12px;
+                font-weight: 600;
+                z-index: 10000;
+                animation: slideIn 0.3s ease;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }, 2000);
+        }
+
+        // Add notification animations
+        const notifStyle = document.createElement('style');
+        notifStyle.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOut {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0); }
+            }
+        `;
+        document.head.appendChild(notifStyle);
+
         // Export winners
         function exportWinners() {
             let allWins = [];
+            const claimedWins = JSON.parse(localStorage.getItem('claimedWins') || '[]');
             
             for (let i = 0; i < localStorage.length; i++) {
                 const key = localStorage.key(i);
@@ -598,7 +708,8 @@
                             .map(h => ({
                                 ...h,
                                 userId: key.replace('foodWheelUser_', ''),
-                                date: new Date(h.date).toLocaleString('ru-RU')
+                                date: new Date(h.date).toLocaleString('ru-RU'),
+                                claimed: claimedWins.includes(h.code) ? 'Да' : 'Нет'
                             }));
                         allWins = allWins.concat(wins);
                     }
@@ -606,8 +717,8 @@
             }
             
             const csv = [
-                ['Дата', 'Приз', 'Код', 'Пользователь'].join(';'),
-                ...allWins.map(w => [w.date, w.prize, w.code, w.userId].join(';'))
+                ['Дата', 'Приз', 'Код', 'Пользователь', 'Выдан'].join(';'),
+                ...allWins.map(w => [w.date, w.prize, w.code, w.userId, w.claimed].join(';'))
             ].join('\n');
             
             const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
