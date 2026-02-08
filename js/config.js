@@ -12,6 +12,27 @@ const CONFIG = {
     // Пароль для админ-панели (в продакшене использовать хеш!)
     ADMIN_PASSWORD: 'admin123',
     
+    // Настройки платежей
+    PAYMENT: {
+        // CloudPayments (для карт) - получите на cloudpayments.ru
+        CLOUDPAYMENTS_PUBLIC_ID: 'pk_ваш_public_id',
+        
+        // СБП - ваш номер телефона
+        SBP_PHONE: '+7 (999) 123-45-67',
+        SBP_RECIPIENT: 'Иван И.',
+        SBP_BANK: 'Тинькофф',
+        
+        // Ручной перевод - номер карты
+        CARD_NUMBER: '4276 5500 1234 5678',
+        CARD_RECIPIENT: 'Иван Иванов',
+        
+        // Ручной перевод - телефон
+        TRANSFER_PHONE: '+7 (999) 123-45-67',
+        
+        // Telegram админ для чеков
+        ADMIN_USERNAME: 'admin_username'
+    },
+    
     // Секторы барабана (8 секторов)
     // winner: true - выигрышный сектор
     SECTORS: [

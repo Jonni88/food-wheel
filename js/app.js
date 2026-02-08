@@ -284,10 +284,14 @@ function updateUI() {
     document.getElementById('spinsCount').textContent = userData.spins;
 }
 
-// Add balance
+// Add balance - now uses payment system
 function addBalance(amount, spins) {
-    // In production, integrate with payment system
-    // For demo, just add balance
+    paymentSystem.showPaymentOptions(amount, spins);
+}
+
+// Old function kept for compatibility
+function addBalanceOld(amount, spins) {
+    // Demo mode - just add balance
     userData.balance += amount;
     userData.spins += spins;
     saveUserData();
