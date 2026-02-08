@@ -46,6 +46,9 @@ function init() {
     console.log('Updating UI...');
     updateUI();
     
+    console.log('Updating history...');
+    updateHistory();
+    
     // Set Telegram theme colors
     if (tg.setHeaderColor) {
         tg.setHeaderColor('#1a1a2e');
