@@ -1,5 +1,8 @@
 // Конфигурация приложения
 const CONFIG = {
+    // ВЕРСИЯ КОНФИГА (меняй чтобы сбросить кэш)
+    VERSION: '3', // Измени на '3', '4' и т.д. при обновлении секторов
+    
     // РЕЖИМ ТЕСТИРОВАНИЯ: бесплатные прокрутки
     TEST_MODE: true,
     FREE_SPINS: 999, // Количество бесплатных прокруток
@@ -48,14 +51,29 @@ const CONFIG = {
 // Сохранение конфигурации в localStorage
 function saveConfig() {
     localStorage.setItem('foodWheelConfig', JSON.stringify(CONFIG));
+    localStorage.setItem('foodWheelConfigVersion', CONFIG.VERSION);
 }
 
 // Загрузка конфигурации
 function loadConfig() {
+    const savedVersion = localStorage.getItem('foodWheelConfigVersion');
     const saved = localStorage.getItem('foodWheelConfig');
+    
+    // Если версия изменилась или нет сохранённой конфигурации
+    if (savedVersion !== CONFIG.VERSION || !saved) {
+        console.log('Config version changed, using new config');
+        saveConfig(); // Сохраняем новую конфигурацию
+        return;
+    }
+    
+    // Загружаем только админские настройки (не секторы)
     if (saved) {
         const parsed = JSON.parse(saved);
-        Object.assign(CONFIG, parsed);
+        // Не перезаписываем SECTORS и VERSION из localStorage
+        CONFIG.SPIN_PRICE = parsed.SPIN_PRICE || CONFIG.SPIN_PRICE;
+        CONFIG.VENUE_ADDRESS = parsed.VENUE_ADDRESS || CONFIG.VENUE_ADDRESS;
+        CONFIG.CONTACT_PHONE = parsed.CONTACT_PHONE || CONFIG.CONTACT_PHONE;
+        CONFIG.PAYMENT = parsed.PAYMENT || CONFIG.PAYMENT;
     }
 }
 

@@ -467,6 +467,14 @@
         let currentSectors = [...CONFIG.SECTORS];
 
         function init() {
+            // Проверяем версию конфига и сбрасываем если нужно
+            const savedVersion = localStorage.getItem('foodWheelConfigVersion');
+            if (savedVersion !== CONFIG.VERSION) {
+                console.log('Config version changed in admin, resetting cache');
+                localStorage.removeItem('foodWheelConfig');
+                localStorage.setItem('foodWheelConfigVersion', CONFIG.VERSION);
+            }
+            
             loadConfig();
             currentSectors = [...CONFIG.SECTORS];
             renderWheelPreview();
