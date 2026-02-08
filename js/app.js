@@ -107,29 +107,89 @@ function saveUserData() {
     }));
 }
 
-// Render wheel segments
+// Render wheel using SVG for proper sectors
 function renderWheel() {
     const wheel = document.getElementById('wheel');
+    if (!wheel) {
+        console.error('Wheel element not found!');
+        return;
+    }
+    
     wheel.innerHTML = '';
     
     const sectors = CONFIG.SECTORS;
     const anglePerSector = 360 / sectors.length;
+    const radius = 160; // Half of 320px
+    const center = 160;
+    
+    // Create SVG element
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('width', '100%');
+    svg.setAttribute('height', '100%');
+    svg.setAttribute('viewBox', '0 0 320 320');
+    svg.style.position = 'absolute';
+    svg.style.top = '0';
+    svg.style.left = '0';
     
     sectors.forEach((sector, index) => {
-        const segment = document.createElement('div');
-        segment.className = 'wheel-segment' + (sector.winner ? ' winner-segment' : ' loser-segment');
-        segment.style.transform = `rotate(${index * anglePerSector}deg)`;
-        segment.style.background = `linear-gradient(135deg, ${sector.color}, ${adjustColor(sector.color, -20)})`;
+        const startAngle = index * anglePerSector;
+        const endAngle = (index + 1) * anglePerSector;
         
-        segment.innerHTML = `
-            <div class="segment-content">
-                <span class="segment-icon">${sector.icon}</span>
-                <span class="segment-text">${sector.name}</span>
-            </div>
-        `;
+        // Calculate path coordinates
+        const startRad = (startAngle - 90) * Math.PI / 180;
+        const endRad = (endAngle - 90) * Math.PI / 180;
         
-        wheel.appendChild(segment);
+        const x1 = center + radius * Math.cos(startRad);
+        const y1 = center + radius * Math.sin(startRad);
+        const x2 = center + radius * Math.cos(endRad);
+        const y2 = center + radius * Math.sin(endRad);
+        
+        // Create sector path
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        const d = `M ${center} ${center} L ${x1} ${y1} A ${radius} ${radius} 0 0 1 ${x2} ${y2} Z`;
+        path.setAttribute('d', d);
+        path.setAttribute('fill', sector.color);
+        path.setAttribute('stroke', '#1a1a2e');
+        path.setAttribute('stroke-width', '3');
+        svg.appendChild(path);
+        
+        // Calculate text position (middle of sector)
+        const midAngle = (startAngle + endAngle) / 2 - 90;
+        const midRad = midAngle * Math.PI / 180;
+        const textRadius = radius * 0.65;
+        const textX = center + textRadius * Math.cos(midRad);
+        const textY = center + textRadius * Math.sin(midRad);
+        
+        // Create text group
+        const textGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        textGroup.setAttribute('transform', `rotate(${midAngle + 90}, ${textX}, ${textY})`);
+        
+        // Icon
+        const iconText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        iconText.setAttribute('x', textX);
+        iconText.setAttribute('y', textY - 5);
+        iconText.setAttribute('text-anchor', 'middle');
+        iconText.setAttribute('font-size', '24');
+        iconText.textContent = sector.icon;
+        textGroup.appendChild(iconText);
+        
+        // Label
+        const labelText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        labelText.setAttribute('x', textX);
+        labelText.setAttribute('y', textY + 15);
+        labelText.setAttribute('text-anchor', 'middle');
+        labelText.setAttribute('font-size', '10');
+        labelText.setAttribute('fill', 'white');
+        labelText.setAttribute('font-weight', 'bold');
+        labelText.textContent = sector.name;
+        textGroup.appendChild(labelText);
+        
+        svg.appendChild(textGroup);
     });
+    
+    wheel.appendChild(svg);
+    
+    console.log('Wheel rendered with', sectors.length, 'sectors');
 }
 
 // Helper to darken color
