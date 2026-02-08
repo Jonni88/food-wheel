@@ -33,6 +33,52 @@ body {
     padding-bottom: 40px;
 }
 
+/* Test Mode Badge */
+.test-badge {
+    background: linear-gradient(135deg, #ff6b35, #f7c531);
+    color: #1a1a2e;
+    text-align: center;
+    padding: 10px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    letter-spacing: 2px;
+    border-radius: 10px;
+    margin-bottom: 15px;
+    animation: pulse 2s infinite;
+    display: none; /* Hidden by default */
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.8; }
+}
+
+/* Test Info */
+.test-info {
+    background: linear-gradient(135deg, rgba(0, 200, 83, 0.2), rgba(0, 200, 83, 0.1));
+    border: 2px solid #00c853;
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 24px;
+    display: none; /* Hidden by default */
+    align-items: center;
+    gap: 16px;
+}
+
+.test-info-icon {
+    font-size: 2.5rem;
+}
+
+.test-info-text {
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+.test-info-text strong {
+    color: #00c853;
+    font-size: 1.1rem;
+}
+
 /* Header */
 .header {
     text-align: center;

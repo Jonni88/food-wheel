@@ -23,6 +23,14 @@ let gameState = {
 function init() {
     loadConfig();
     loadUserData();
+    
+    // В тестовом режиме даём бесплатные прокрутки
+    if (CONFIG.TEST_MODE) {
+        userData.spins = CONFIG.FREE_SPINS;
+        saveUserData();
+        setupTestModeUI();
+    }
+    
     renderWheel();
     renderPrizesList();
     updateUI();
@@ -30,6 +38,36 @@ function init() {
     // Set Telegram theme colors
     tg.setHeaderColor('#1a1a2e');
     tg.setBackgroundColor('#1a1a2e');
+}
+
+// Setup Test Mode UI
+function setupTestModeUI() {
+    // Показываем бейдж тестового режима
+    const testBadge = document.getElementById('testBadge');
+    if (testBadge) testBadge.style.display = 'block';
+    
+    // Показываем информацию о бесплатных прокрутках
+    const testInfo = document.getElementById('testInfo');
+    if (testInfo) testInfo.style.display = 'flex';
+    
+    // Скрываем баланс
+    const balanceCard = document.getElementById('balanceCard');
+    if (balanceCard) balanceCard.style.display = 'none';
+    
+    // Обновляем инструкцию
+    const howToGet = document.getElementById('howToGet');
+    if (howToGet) {
+        howToGet.innerHTML = `
+            <h3>📍 Как получить приз?</h3>
+            <ol>
+                <li>Крутите барабан бесплатно!</li>
+                <li>Если стрелка попадает на приз — вы выиграли!</li>
+                <li>Получите сообщение с кодом выигрыша</li>
+                <li>Покажите код в нашем заведении</li>
+                <li>Получите ваш приз! 🎉</li>
+            </ol>
+        `;
+    }
 }
 
 // Load user data from storage
@@ -108,16 +146,24 @@ function renderPrizesList() {
 function spinWheel() {
     if (gameState.isSpinning) return;
     
-    if (userData.spins <= 0 && userData.balance < CONFIG.SPIN_PRICE) {
-        showModal('addBalanceModal');
-        return;
-    }
-    
-    // Deduct spin or money
-    if (userData.spins > 0) {
+    // В тестовом режиме просто проверяем есть ли прокрутки
+    if (CONFIG.TEST_MODE) {
+        if (userData.spins <= 0) {
+            userData.spins = CONFIG.FREE_SPINS; // Перезаряжаем бесплатные прокрутки
+        }
         userData.spins--;
     } else {
-        userData.balance -= CONFIG.SPIN_PRICE;
+        // Режим оплаты
+        if (userData.spins <= 0 && userData.balance < CONFIG.SPIN_PRICE) {
+            showModal('addBalanceModal');
+            return;
+        }
+        
+        if (userData.spins > 0) {
+            userData.spins--;
+        } else {
+            userData.balance -= CONFIG.SPIN_PRICE;
+        }
     }
     
     saveUserData();
@@ -280,8 +326,30 @@ function updateHistory() {
 
 // Update UI
 function updateUI() {
-    document.getElementById('userBalance').textContent = userData.balance + ' ₽';
-    document.getElementById('spinsCount').textContent = userData.spins;
+    const balanceEl = document.getElementById('userBalance');
+    const spinsEl = document.getElementById('spinsCount');
+    const spinBtn = document.getElementById('spinBtn');
+    
+    if (CONFIG.TEST_MODE) {
+        // В тестовом режиме показываем ∞ и убираем цену
+        if (balanceEl) balanceEl.textContent = '∞';
+        if (spinsEl) spinsEl.textContent = '∞';
+        if (spinBtn) {
+            spinBtn.innerHTML = `
+                <span class="spin-text">КРУТИТЬ</span>
+                <span class="spin-price">БЕСПЛАТНО</span>
+            `;
+        }
+    } else {
+        if (balanceEl) balanceEl.textContent = userData.balance + ' ₽';
+        if (spinsEl) spinsEl.textContent = userData.spins;
+        if (spinBtn) {
+            spinBtn.innerHTML = `
+                <span class="spin-text">КРУТИТЬ</span>
+                <span class="spin-price">100 ₽</span>
+            `;
+        }
+    }
 }
 
 // Add balance - now uses payment system
