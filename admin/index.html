@@ -346,6 +346,26 @@
             gap: 12px;
         }
 
+        /* Export Modal Styles */
+        #exportModal .modal-content {
+            display: flex;
+            flex-direction: column;
+        }
+
+        #exportModal pre {
+            background: rgba(0,0,0,0.5);
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            color: #fff;
+            max-height: 50vh;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
         .empty-state {
             text-align: center;
             padding: 40px;
@@ -752,13 +772,58 @@
                 txtContent += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
             }
             
-            const blob = new Blob([txtContent], { type: 'text/plain;charset=utf-8;' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = 'выигрыши_' + new Date().toISOString().split('T')[0] + '.txt';
-            link.click();
+            // Пробуем скачать файл
+            try {
+                const blob = new Blob([txtContent], { type: 'text/plain;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = 'выигрыши_' + new Date().toISOString().split('T')[0] + '.txt';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                showNotification('📄 Список выгружен в Загрузки!');
+            } catch (e) {
+                // Если скачивание не работает (Telegram WebView), показываем текст
+                showExportModal(txtContent);
+            }
+        }
+
+        // Show export modal with text
+        function showExportModal(text) {
+            // Удаляем старое окно если есть
+            const oldModal = document.getElementById('exportModal');
+            if (oldModal) oldModal.remove();
             
-            showNotification('📄 Список выгружен!');
+            const modal = document.createElement('div');
+            modal.id = 'exportModal';
+            modal.className = 'modal active';
+            modal.style.zIndex = '10000';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 90%; width: 600px; max-height: 80vh;">
+                    <button class="modal-close" onclick="document.getElementById('exportModal').remove()">×</button>
+                    <h2>📄 Список выигрышей</h2>
+                    <p style="color: var(--text-secondary); margin-bottom: 10px;">
+                        Нажмите "Копировать" и отправьте себе в Telegram
+                    </p>
+                    <div style="background: rgba(0,0,0,0.3); border-radius: 12px; padding: 15px; margin: 15px 0; max-height: 400px; overflow-y: auto;">
+                        <pre id="exportText" style="margin: 0; white-space: pre-wrap; word-wrap: break-word; font-family: monospace; font-size: 12px; line-height: 1.4;">${text.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>
+                    </div>
+                    <button class="btn btn-primary" onclick="copyExportText()" style="width: 100%;">
+                        📋 Копировать весь текст
+                    </button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        // Copy export text
+        function copyExportText() {
+            const text = document.getElementById('exportText').textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                showNotification('✅ Текст скопирован! Отправьте его себе в Telegram');
+            }).catch(() => {
+                showNotification('❌ Не удалось скопировать');
+            });
         }
 
         // Initialize
