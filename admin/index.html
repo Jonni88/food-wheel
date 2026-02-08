@@ -455,7 +455,7 @@
 
             <div style="margin-top: 20px;">
                 <button class="btn" onclick="exportWinners()">
-                    📥 Экспортировать список
+                    📄 Выгрузить список (TXT)
                 </button>
             </div>
         </div>
@@ -701,7 +701,7 @@
         `;
         document.head.appendChild(notifStyle);
 
-        // Export winners
+        // Export winners as TXT
         function exportWinners() {
             let allWins = [];
             const claimedWins = JSON.parse(localStorage.getItem('claimedWins') || '[]');
@@ -717,23 +717,48 @@
                                 ...h,
                                 userId: key.replace('foodWheelUser_', ''),
                                 date: new Date(h.date).toLocaleString('ru-RU'),
-                                claimed: claimedWins.includes(h.code) ? 'Да' : 'Нет'
+                                claimed: claimedWins.includes(h.code) ? '✅ Выдан' : '⏳ Не выдан'
                             }));
                         allWins = allWins.concat(wins);
                     }
                 }
             }
             
-            const csv = [
-                ['Дата', 'Приз', 'Код', 'Пользователь', 'Выдан'].join(';'),
-                ...allWins.map(w => [w.date, w.prize, w.code, w.userId, w.claimed].join(';'))
-            ].join('\n');
+            // Sort by date (newest first)
+            allWins.sort((a, b) => new Date(b.date) - new Date(a.date));
             
-            const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+            // Create formatted text
+            const dateStr = new Date().toLocaleString('ru-RU');
+            let txtContent = `╔════════════════════════════════════════════════════════╗\n`;
+            txtContent += `║          🍔🍕 БАРАБАН УДАЧИ - СПИСОК ВЫИГРЫШЕЙ          ║\n`;
+            txtContent += `╠════════════════════════════════════════════════════════╣\n`;
+            txtContent += `║  Дата экспорта: ${dateStr.padEnd(35)}║\n`;
+            txtContent += `║  Всего выигрышей: ${String(allWins.length).padEnd(33)}║\n`;
+            txtContent += `╚════════════════════════════════════════════════════════╝\n\n`;
+            
+            if (allWins.length === 0) {
+                txtContent += 'Пока нет выигрышей.\n';
+            } else {
+                allWins.forEach((win, index) => {
+                    txtContent += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+                    txtContent += `  №${index + 1}\n`;
+                    txtContent += `  🎁 Приз: ${win.icon} ${win.prize}\n`;
+                    txtContent += `  🔑 Код: ${win.code}\n`;
+                    txtContent += `  📅 Дата: ${win.date}\n`;
+                    txtContent += `  👤 Пользователь: ${win.userId}\n`;
+                    txtContent += `  📋 Статус: ${win.claimed}\n`;
+                    txtContent += `\n`;
+                });
+                txtContent += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+            }
+            
+            const blob = new Blob([txtContent], { type: 'text/plain;charset=utf-8;' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
-            link.download = 'winners_' + new Date().toISOString().split('T')[0] + '.csv';
+            link.download = 'выигрыши_' + new Date().toISOString().split('T')[0] + '.txt';
             link.click();
+            
+            showNotification('📄 Список выгружен!');
         }
 
         // Initialize
